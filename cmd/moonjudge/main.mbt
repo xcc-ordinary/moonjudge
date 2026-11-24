@@ -189,13 +189,14 @@ async fn demo() -> Unit {
 
 ///|
 async fn save_failure(f : @stress.Failure) -> Unit {
-  @fs.mkdir("moonjudge-failure", recursive=true, allow_existing=true)
-  @fs.write_text("moonjudge-failure/input.txt", f.input)
-  @fs.write_text("moonjudge-failure/brute.txt", f.brute_out)
-  @fs.write_text("moonjudge-failure/fast.txt", f.fast_out)
-  @fs.write_text("moonjudge-failure/seed.txt", "\{f.seed}")
-  @fs.write_text("moonjudge-failure/reason.txt", f.reason)
-  println("Saved counterexample to moonjudge-failure/ (replay with the seed).")
+  let dir = "moonjudge-failure/\{f.seed}"
+  @fs.mkdir(dir, recursive=true, allow_existing=true)
+  @fs.write_text(dir + "/input.txt", f.input)
+  @fs.write_text(dir + "/brute.txt", f.brute_out)
+  @fs.write_text(dir + "/fast.txt", f.fast_out)
+  @fs.write_text(dir + "/seed.txt", "\{f.seed}")
+  @fs.write_text(dir + "/reason.txt", f.reason)
+  println("Saved counterexample to \{dir}/ (replay with the seed).")
 }
 
 // ---- judge: run one solution and judge its output ----
