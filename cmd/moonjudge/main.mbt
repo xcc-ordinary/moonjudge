@@ -67,9 +67,14 @@ fn get_opt(args : Array[String], name : String) -> String? {
 }
 
 ///|
-fn parse_int(s : String) -> Int32 {
-  @string.parse_int(s) catch {
-    _ => 0
+fn parse_positive(s : String) -> Int32? {
+  let v = @string.parse_int(s) catch {
+    _ => return None
+  }
+  if v > 0 {
+    Some(v)
+  } else {
+    None
   }
 }
 
@@ -197,9 +202,19 @@ async fn save_failure(f : @stress.Failure) -> Unit {
 
 ///|
 async fn judge_cli(args : Array[String]) -> Unit {
+  if get_opt(args, "--prog") is None {
+    println("judge: need --prog \"CMD\"")
+    return
+  }
   let (p, a) = split_cmd(get_opt(args, "--prog").unwrap_or(""))
   let mode = parse_mode(get_opt(args, "--checker").unwrap_or("exact"))
-  let timeout = parse_int(get_opt(args, "--timeout").unwrap_or("5000"))
+  let timeout = match parse_positive(get_opt(args, "--timeout").unwrap_or("5000")) {
+    Some(n) => n
+    None => {
+      println("judge: --timeout must be a positive integer")
+      return
+    }
+  }
   let input = match get_opt(args, "--input") {
     Some(file) => @fs.read_text(file)
     None => get_opt(args, "--stdin").unwrap_or("")
@@ -239,13 +254,31 @@ async fn judge_cli(args : Array[String]) -> Unit {
 
 ///|
 async fn stress_cli(args : Array[String]) -> Unit {
+  if get_opt(args, "--gen") is None ||
+     get_opt(args, "--brute") is None ||
+     get_opt(args, "--fast") is None {
+    println("stress: need --gen, --brute and --fast \"CMD\"")
+    return
+  }
   let (gp, ga) = split_cmd(get_opt(args, "--gen").unwrap_or(""))
   let (bp, ba) = split_cmd(get_opt(args, "--brute").unwrap_or(""))
   let (fp, fa) = split_cmd(get_opt(args, "--fast").unwrap_or(""))
-  let rounds = parse_int(get_opt(args, "--rounds").unwrap_or("100"))
+  let rounds = match parse_positive(get_opt(args, "--rounds").unwrap_or("100")) {
+    Some(n) => n
+    None => {
+      println("stress: --rounds must be a positive integer")
+      return
+    }
+  }
   let seed = parse_seed(get_opt(args, "--seed").unwrap_or("42"))
   let mode = parse_mode(get_opt(args, "--checker").unwrap_or("exact"))
-  let timeout = parse_int(get_opt(args, "--timeout").unwrap_or("5000"))
+  let timeout = match parse_positive(get_opt(args, "--timeout").unwrap_or("5000")) {
+    Some(n) => n
+    None => {
+      println("stress: --timeout must be a positive integer")
+      return
+    }
+  }
   let rng = @gen.Rng::new(seed)
   for i in 0..<rounds {
     let s = rng.next_u64()
@@ -285,7 +318,13 @@ async fn batch_cli(args : Array[String]) -> Unit {
   let (p, a) = split_cmd(get_opt(args, "--prog").unwrap_or(""))
   let dir = get_opt(args, "--tests").unwrap_or("")
   let mode = parse_mode(get_opt(args, "--checker").unwrap_or("exact"))
-  let timeout = parse_int(get_opt(args, "--timeout").unwrap_or("5000"))
+  let timeout = match parse_positive(get_opt(args, "--timeout").unwrap_or("5000")) {
+    Some(n) => n
+    None => {
+      println("batch: --timeout must be a positive integer")
+      return
+    }
+  }
   if p == "" || dir == "" {
     println("batch: need --prog \"CMD\" and --tests DIR")
     return
