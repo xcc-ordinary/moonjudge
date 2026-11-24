@@ -1,6 +1,6 @@
 name = "xcc-ordinary/moonjudge"
 
-version = "0.2.1"
+version = "0.2.2"
 
 repository = "https://github.com/xcc-ordinary/moonjudge"
 

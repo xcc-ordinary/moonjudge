@@ -175,6 +175,8 @@ matching testlib.h's `readInt` / `readLong` contract, reimplemented natively.
   judging, Chinese README.
 - [x] **0.2.1** — reject non-finite doubles; distinguish spawn errors (RE) from
   timeouts (TLE); GitHub Actions CI.
+- [x] **0.2.2** — CLI argument validation, per-seed counterexample archive,
+  `batch` `*.out` fallback, CHANGELOG.
 - [ ] Future: more validators.
 
 ## License & origin
