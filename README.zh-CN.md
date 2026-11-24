@@ -28,7 +28,7 @@ moon add xcc-ordinary/moonjudge
 ## 功能
 
 - **`checker`** —— 严格流式校验核心（`InStream`）：`read_int`（符号/前导零/负零/
-  溢出/边界/token 边界规则）、`read_double`（严格小数/指数）、`read_token`、
+  溢出/边界/token 边界规则）、`read_double`（严格小数/指数，拒绝非有限值）、`read_token`、
   `read_line`、`read_eof`、`ensure`；`CheckError` 与 `Verdict`（AC/WA/TLE/RE/CF）。
 - **`checkers`** —— 现成 checker：`check_ints`、`check_int_sequence`、
   `check_unordered_ints`（多重集）、`check_permutation`（1..n）、`check_yes_no`、
@@ -45,8 +45,8 @@ moon add xcc-ordinary/moonjudge
 ## 快速开始
 
 ```bash
-moon test --target wasm          # 全量回归（83 测试）
-moon test --target wasm-gc       # 纯逻辑包（75 测试）
+moon test --target wasm          # 全量回归（87 测试）
+moon test --target wasm-gc       # 纯逻辑包（78 测试）
 
 # 自包含演示：抓出植入 bug 并保存反例
 moon run --target wasm cmd/moonjudge -- demo
@@ -85,7 +85,8 @@ check_unordered_ints:  30000 ints (reversed) in ~0.003s
 
 ## 验证
 
-- wasm 全量 **83 测试通过**，wasm-gc 纯逻辑 **75** 通过。
+- wasm 全量 **87 测试通过**，wasm-gc 纯逻辑 **78** 通过。
+- CI（GitHub Actions）在每次 push/PR 时跑 check + 全量测试。
 - 故意构造的错误回归样例库覆盖每条严格整数/浮点规则。
 - 跨平台集成测试按操作系统选择 `cmd.exe` / `sh`。
 

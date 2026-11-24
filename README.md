@@ -1,5 +1,7 @@
 # moonjudge
 
+[![CI](https://github.com/xcc-ordinary/moonjudge/actions/workflows/ci.yml/badge.svg)](https://github.com/xcc-ordinary/moonjudge/actions/workflows/ci.yml)
+
 Local judge and stress-testing toolchain for MoonBit — a native reimplementation
 of the strict checking semantics of [testlib.h](https://github.com/MikeMirzayanov/testlib)
 (MIT, Codeforces), plus seeded data generation, a subprocess runner with timeout,
@@ -21,7 +23,7 @@ a scan of ~100 mooncakes keywords found zero projects for `testlib` or judging.
 
 - **`checker`** — strict streaming validation core (`InStream`): `read_int`
   (sign / leading-zero / negative-zero / overflow / bounds / token-boundary rules),
-  `read_double` (strict decimal / exponent), `read_token`, `read_line`, `read_eof`,
+  `read_double` (strict decimal / exponent, rejects non-finite), `read_token`, `read_line`, `read_eof`,
   `ensure`; `CheckError` and `Verdict`
   (`AC` / `WA` / `TLE` / `RE` / `CF`) types.
 - **`checkers`** — ready-made checkers: `check_ints`, `check_int_sequence`,
@@ -33,7 +35,7 @@ a scan of ~100 mooncakes keywords found zero projects for `testlib` or judging.
 - **`gen`** — seedable, reproducible `Rng` (xorshift64*) with `next_int(min, max)`,
   `next_array`, and `permutation` (Fisher-Yates).
 - **`runner`** — async subprocess execution with stdin feed, stdout/stderr capture,
-  timeout kill, and verdict mapping (`judge`).
+  timeout kill, and verdict mapping (`judge`; spawn failures map to RE, not TLE).
 - **`stress`** — reproducible comparison loop (`stress_inprocess`) with four compare
   modes (`Exact` / `Ints` / `UnorderedInts` / `Doubles(eps)`); returns the first
   counterexample with its seed for exact replay.
@@ -57,8 +59,8 @@ Then import the packages you need, e.g. `xcc-ordinary/moonjudge/checkers`
 ## Quickstart
 
 ```bash
-moon test --target wasm          # full regression suite (83 tests)
-moon test --target wasm-gc       # pure-logic packages (75 tests)
+moon test --target wasm          # full regression suite (87 tests)
+moon test --target wasm-gc       # pure-logic packages (78 tests)
 
 # Self-contained demo: catches a planted bug and saves the counterexample.
 moon run --target wasm cmd/moonjudge -- demo
@@ -106,7 +108,8 @@ Saved counterexample to moonjudge-failure/ (replay with the seed).
 
 ## Verification
 
-- **83 tests passing** on `wasm` (full suite), **75** on `wasm-gc` (pure logic).
+- **87 tests passing** on `wasm` (full suite), **78** on `wasm-gc` (pure logic).
+- CI (GitHub Actions) runs check + full tests on every push and pull request.
 - A deliberately-wrong regression corpus exercises every strict integer / double rule.
 - The stress demo plants a real bug (`n % 7 == 0` off-by-one) and the loop catches it;
   the same seed reproduces the identical counterexample.
@@ -170,6 +173,8 @@ matching testlib.h's `readInt` / `readLong` contract, reimplemented natively.
 - [x] mooncakes publication (`xcc-ordinary/moonjudge` 0.1.0).
 - [x] **0.2.0** — `check_unordered_doubles` / `check_tokens`, `batch` directory
   judging, Chinese README.
+- [x] **0.2.1** — reject non-finite doubles; distinguish spawn errors (RE) from
+  timeouts (TLE); GitHub Actions CI.
 - [ ] Future: more validators.
 
 ## License & origin

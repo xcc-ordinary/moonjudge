@@ -13,7 +13,8 @@ pub struct RunResult {
 ///|
 /// Run `program` with `args`, optionally feeding `stdin` text, capturing
 /// stdout/stderr, and enforcing a wall-clock timeout (default 5000 ms).
-/// A timeout (or execution failure) yields `timed_out = true`.
+/// A timeout yields `timed_out = true`; other execution failures yield
+/// `timed_out = false` with `exit_code = -1` (mapped to RE by `judge`).
 pub async fn run(
   program : String,
   args : ArrayView[String],
@@ -41,12 +42,19 @@ pub async fn run(
       timed_out: false,
     }
   } catch {
-    _ =>
+    @async.TimeoutError =>
       {
         exit_code: -1,
         stdout: "",
-        stderr: "timeout or execution error",
+        stderr: "timeout",
         timed_out: true,
+      }
+    err =>
+      {
+        exit_code: -1,
+        stdout: "",
+        stderr: "execution error: \{err}",
+        timed_out: false,
       }
   }
 }

@@ -114,3 +114,14 @@ async test "judge maps TLE on timeout" {
   let v = @runner.judge(r, out => @checkers.check_ints(out, 1))
   assert_eq(v, @checker.Verdict::TLE)
 }
+
+///|
+async test "missing program is RE, not TLE" {
+  let r = @runner.run("moonjudge_no_such_program_xyz", [])
+  assert_eq(r.timed_out, false)
+  let v = @runner.judge(r, out => @checkers.check_ints(out, 1))
+  match v {
+    @checker.Verdict::RE(_) => ()
+    _ => assert_eq(true, false)
+  }
+}

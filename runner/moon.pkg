@@ -1,4 +1,5 @@
 import {
+  "moonbitlang/core/async",
   "moonbitlang/core/async/shell",
   "xcc-ordinary/moonjudge/checker",
 }

@@ -23,6 +23,9 @@ pub fn InStream::read_double(self : InStream) -> Double raise CheckError {
   let v = @string.parse_double(tok) catch {
     _ => raise CheckError("invalid double: " + tok)
   }
+  if !v.is_finite() {
+    raise CheckError("double must be finite (overflow to infinity rejected)")
+  }
   if v == 0.0 && buf.length() > 0 && buf[0] == '-' {
     raise CheckError("negative zero is not allowed")
   }

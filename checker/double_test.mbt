@@ -70,3 +70,33 @@ test "read_double rejects trailing garbage" {
     true,
   )
 }
+
+///|
+test "read_double rejects overflow to infinity" {
+  let s = @checker.InStream::new("1e999")
+  assert_eq(
+    raised_d(() => {
+      let _ = s.read_double()
+      ()
+    }),
+    true,
+  )
+}
+
+///|
+test "read_double rejects negative infinity" {
+  let s = @checker.InStream::new("-1e999")
+  assert_eq(
+    raised_d(() => {
+      let _ = s.read_double()
+      ()
+    }),
+    true,
+  )
+}
+
+///|
+test "read_double accepts large finite" {
+  let s = @checker.InStream::new("1e308")
+  assert_eq(s.read_double().is_finite(), true)
+}
