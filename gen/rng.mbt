@@ -31,3 +31,34 @@ pub fn Rng::next_int(self : Rng, min : Int64, max : Int64) -> Int64 {
   let span = (max - min + 1L).reinterpret_as_uint64()
   min + (self.next_u64() % span).reinterpret_as_int64()
 }
+
+///|
+/// Generate an array of `n` integers, each in the inclusive range `[min, max]`.
+pub fn Rng::next_array(
+  self : Rng,
+  n : Int32,
+  min : Int64,
+  max : Int64,
+) -> Array[Int64] {
+  let a : Array[Int64] = []
+  for _ in 0..<n {
+    a.push(self.next_int(min, max))
+  }
+  a
+}
+
+///|
+/// Generate a uniformly random permutation of `1..n` (Fisher-Yates shuffle).
+pub fn Rng::permutation(self : Rng, n : Int32) -> Array[Int64] {
+  let a : Array[Int64] = []
+  for i in 0..<n {
+    a.push((i + 1).to_int64())
+  }
+  for i in 0..<n {
+    let j = self.next_int(i.to_int64(), (n - 1).to_int64()).to_int()
+    let tmp = a[i]
+    a[i] = a[j]
+    a[j] = tmp
+  }
+  a
+}

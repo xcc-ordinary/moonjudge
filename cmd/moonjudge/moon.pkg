@@ -2,11 +2,11 @@ import {
   "moonbitlang/core/env",
   "moonbitlang/core/string",
   "moonbitlang/core/async/fs",
-  "moonjudge/checker",
-  "moonjudge/checkers",
-  "moonjudge/gen",
-  "moonjudge/stress",
-  "moonjudge/runner",
+  "xcc-ordinary/moonjudge/checker",
+  "xcc-ordinary/moonjudge/checkers",
+  "xcc-ordinary/moonjudge/gen",
+  "xcc-ordinary/moonjudge/stress",
+  "xcc-ordinary/moonjudge/runner",
 }
 
 pkgtype(kind: "executable")

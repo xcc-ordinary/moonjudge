@@ -1,12 +1,12 @@
 import {
   "moonbitlang/core/async/shell",
-  "moonjudge/checker",
+  "xcc-ordinary/moonjudge/checker",
 }
 
 import {
   "moonbitlang/core/async",
   "moonbitlang/core/env",
-  "moonjudge/checkers",
+  "xcc-ordinary/moonjudge/checkers",
 } for "test"
 
 options(

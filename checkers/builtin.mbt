@@ -68,13 +68,5 @@ pub fn check_unordered_ints(
 
 ///|
 fn sort_i64(a : Array[Int64]) -> Unit {
-  for i in 1..<a.length() {
-    let key = a[i]
-    let mut j = i - 1
-    while j >= 0 && a[j] > key {
-      a[j + 1] = a[j]
-      j = j - 1
-    }
-    a[j + 1] = key
-  }
+  a.sort()
 }

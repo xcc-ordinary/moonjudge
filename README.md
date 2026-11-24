@@ -25,8 +25,10 @@ a scan of ~100 mooncakes keywords found zero projects for `testlib` or judging.
 - **`checkers`** — ready-made checkers: `check_ints`, `check_int_sequence`,
   `check_unordered_ints` (multiset), `check_permutation` (of 1..n), `check_yes_no`
   (case-insensitive), `check_token` (exact), `check_double` / `check_doubles` /
-  `check_double_sequence` (absolute/relative tolerance, testlib-style).
-- **`gen`** — seedable, reproducible `Rng` (xorshift64*) with `next_int(min, max)`.
+  `check_double_sequence` (absolute/relative tolerance, testlib-style),
+  `check_sorted` (nondecreasing integer sequence).
+- **`gen`** — seedable, reproducible `Rng` (xorshift64*) with `next_int(min, max)`,
+  `next_array`, and `permutation` (Fisher-Yates).
 - **`runner`** — async subprocess execution with stdin feed, stdout/stderr capture,
   timeout kill, and verdict mapping (`judge`).
 - **`stress`** — reproducible comparison loop (`stress_inprocess`) with four compare
@@ -38,11 +40,22 @@ a scan of ~100 mooncakes keywords found zero projects for `testlib` or judging.
 - **`examples`** — dogfooding on real CSP-style problems: maximum subarray sum
   (all-negative Kadane bug) and lower_bound binary search (duplicate-element bug).
 
+## Install from mooncakes
+
+Published on [mooncakes.io](https://mooncakes.io) as `xcc-ordinary/moonjudge`:
+
+```bash
+moon add xcc-ordinary/moonjudge
+```
+
+Then import the packages you need, e.g. `xcc-ordinary/moonjudge/checkers`
+(as `@checkers`) and `xcc-ordinary/moonjudge/stress`.
+
 ## Quickstart
 
 ```bash
-moon test --target wasm          # full regression suite (72 tests)
-moon test --target wasm-gc       # pure-logic packages (64 tests)
+moon test --target wasm          # full regression suite (79 tests)
+moon test --target wasm-gc       # pure-logic packages (71 tests)
 
 # Self-contained demo: catches a planted bug and saves the counterexample.
 moon run --target wasm cmd/moonjudge -- demo
@@ -87,7 +100,7 @@ Saved counterexample to moonjudge-failure/ (replay with the seed).
 
 ## Verification
 
-- **72 tests passing** on `wasm` (full suite), **64** on `wasm-gc` (pure logic).
+- **79 tests passing** on `wasm` (full suite), **71** on `wasm-gc` (pure logic).
 - A deliberately-wrong regression corpus exercises every strict integer / double rule.
 - The stress demo plants a real bug (`n % 7 == 0` off-by-one) and the loop catches it;
   the same seed reproduces the identical counterexample.
@@ -96,11 +109,15 @@ Saved counterexample to moonjudge-failure/ (replay with the seed).
 
 ### Benchmark
 
-`check_int_sequence` throughput (wasm-gc, debug build, `moon test checkers`):
+Throughput (wasm-gc, debug build, `moon test checkers`):
 
 ```
-check_int_sequence: 4000000 ints in 0.128s   (~31 million integers / second)
+check_int_sequence:    4000000 ints in ~0.15s   (~27 million integers / second)
+check_unordered_ints:  30000 ints (reversed) in ~0.003s
 ```
+
+The unordered path uses the builtin `Array::sort`, **~34x faster** than the
+previous insertion sort on this worst-case (reversed) input.
 
 ## Dogfooding (real CSP-style problem)
 
@@ -144,7 +161,8 @@ matching testlib.h's `readInt` / `readLong` contract, reimplemented natively.
 - [x] **Post-MVP** — double/tolerance checkers, `check_permutation` / `check_yes_no` /
   `check_token`, `judge --answer` reference comparison + `Doubles` mode, two real
   CSP-style dogfooding cases (`examples`).
-- [ ] Future: mooncakes publication, more validators.
+- [x] mooncakes publication (`xcc-ordinary/moonjudge` 0.1.0).
+- [ ] Future: more validators.
 
 ## License & origin
 

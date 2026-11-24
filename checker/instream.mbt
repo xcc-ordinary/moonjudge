@@ -31,15 +31,6 @@ pub fn InStream::new(text : String) -> InStream {
 }
 
 ///|
-fn InStream::peek(self : InStream) -> Char? {
-  if self.pos < self.chars.length() {
-    Some(self.chars[self.pos])
-  } else {
-    None
-  }
-}
-
-///|
 fn InStream::advance(self : InStream) -> Unit {
   self.pos = self.pos + 1
 }
@@ -82,34 +73,36 @@ pub fn InStream::read_int(
   max? : Int64,
 ) -> Int64 raise CheckError {
   self.skip_space()
+  let n = self.chars.length()
+  let mut p = self.pos
+  if p >= n {
+    raise CheckError("expected integer, found EOF")
+  }
   let mut neg = false
-  match self.peek() {
-    None => raise CheckError("expected integer, found EOF")
-    Some(c) =>
-      if c == '-' || c == '+' {
-        neg = c == '-'
-        self.advance()
-      }
+  let c0 = self.chars[p]
+  if c0 == '-' || c0 == '+' {
+    neg = c0 == '-'
+    p = p + 1
   }
   let mut value : Int64 = 0L
   let mut digits = 0
   let mut first_digit : Char = '0'
-  while true {
-    match self.peek() {
-      Some(c) if c.is_ascii_digit() => {
-        if digits == 0 {
-          first_digit = c
-        }
-        if value > 922337203685477580L {
-          raise CheckError("integer overflow")
-        }
-        value = value * 10L + (c.to_int() - 48).to_int64()
-        digits = digits + 1
-        self.advance()
-      }
-      _ => break
+  while p < n {
+    let c = self.chars[p]
+    if !c.is_ascii_digit() {
+      break
     }
+    if digits == 0 {
+      first_digit = c
+    }
+    if value > 922337203685477580L {
+      raise CheckError("integer overflow")
+    }
+    value = value * 10L + (c.to_int() - 48).to_int64()
+    digits = digits + 1
+    p = p + 1
   }
+  self.pos = p
   if digits == 0 {
     raise CheckError("expected integer digits")
   }
@@ -122,10 +115,8 @@ pub fn InStream::read_int(
   if neg && value == 0L {
     raise CheckError("negative zero is not allowed")
   }
-  match self.peek() {
-    Some(c) if !c.is_ascii_whitespace() =>
-      raise CheckError("integer must be followed by whitespace or EOF")
-    _ => ()
+  if p < n && !self.chars[p].is_ascii_whitespace() {
+    raise CheckError("integer must be followed by whitespace or EOF")
   }
   match min {
     Some(lo) =>

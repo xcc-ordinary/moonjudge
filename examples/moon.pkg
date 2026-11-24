@@ -1,6 +1,6 @@
 import {
   "moonbitlang/core/builtin",
-  "moonjudge/checker",
-  "moonjudge/gen",
-  "moonjudge/stress",
+  "xcc-ordinary/moonjudge/checker",
+  "xcc-ordinary/moonjudge/gen",
+  "xcc-ordinary/moonjudge/stress",
 }
