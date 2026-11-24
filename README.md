@@ -19,10 +19,12 @@ a scan of ~100 mooncakes keywords found zero projects for `testlib` or judging.
 
 - **`checker`** — strict streaming validation core (`InStream`): `read_int`
   (sign / leading-zero / negative-zero / overflow / bounds / token-boundary rules),
-  `read_token`, `read_line`, `read_eof`, `ensure`; `CheckError` and `Verdict`
+  `read_double` (strict decimal / exponent), `read_token`, `read_line`, `read_eof`,
+  `ensure`; `CheckError` and `Verdict`
   (`AC` / `WA` / `TLE` / `RE` / `CF`) types.
 - **`checkers`** — ready-made checkers: `check_ints`, `check_int_sequence`
-  (any-length strict integer sequence), `check_unordered_ints` (multiset / permutation).
+  (any-length strict integer sequence), `check_unordered_ints` (multiset / permutation),
+  `check_double` / `check_doubles` (absolute/relative tolerance, testlib-style).
 - **`gen`** — seedable, reproducible `Rng` (xorshift64*) with `next_int(min, max)`.
 - **`runner`** — async subprocess execution with stdin feed, stdout/stderr capture,
   timeout kill, and verdict mapping (`judge`).
@@ -31,12 +33,14 @@ a scan of ~100 mooncakes keywords found zero projects for `testlib` or judging.
   its seed for exact replay.
 - **`cmd/moonjudge`** — CLI with `demo`, `judge`, and `stress` subcommands; persists
   counterexamples to `moonjudge-failure/` for replay.
+- **`examples`** — dogfooding on a real CSP-style problem (maximum subarray sum):
+  stress catches the classic all-negative Kadane bug.
 
 ## Quickstart
 
 ```bash
-moon test --target wasm          # full regression suite (44 tests)
-moon test --target wasm-gc       # pure-logic packages (36 tests)
+moon test --target wasm          # full regression suite (58 tests)
+moon test --target wasm-gc       # pure-logic packages (50 tests)
 
 # Self-contained demo: catches a planted bug and saves the counterexample.
 moon run --target wasm cmd/moonjudge -- demo
@@ -75,14 +79,16 @@ Saved counterexample to moonjudge-failure/ (replay with the seed).
 | `runner` | Subprocess execution, timeout, capture, verdict mapping |
 | `stress` | Reproducible brute-vs-fast comparison loop + counterexample capture |
 | `cmd/moonjudge` | CLI entry: `demo` / `judge` / `stress` |
+| `examples` | Dogfooding: real CSP-style problem stress cases |
 | `probe` | Minimal subprocess capability probe |
 
 ## Verification
 
-- **44 tests passing** on `wasm` (full suite), **36** on `wasm-gc` (pure logic).
-- A deliberately-wrong regression corpus exercises every strict integer rule.
+- **58 tests passing** on `wasm` (full suite), **50** on `wasm-gc` (pure logic).
+- A deliberately-wrong regression corpus exercises every strict integer / double rule.
 - The stress demo plants a real bug (`n % 7 == 0` off-by-one) and the loop catches it;
   the same seed reproduces the identical counterexample.
+- Dogfooding on a real CSP-style problem catches a genuine algorithm bug (see below).
 - Cross-platform integration tests select `cmd.exe` / `sh` by OS.
 
 ### Benchmark
@@ -92,6 +98,21 @@ Saved counterexample to moonjudge-failure/ (replay with the seed).
 ```
 check_int_sequence: 4000000 ints in 0.128s   (~31 million integers / second)
 ```
+
+## Dogfooding (real CSP-style problem)
+
+`examples/max_subarray.mbt` stress-tests **maximum subarray sum**: an O(n²) brute
+force against a Kadane implementation with the classic "initialize best to 0" bug.
+moonjudge finds a real counterexample at round 0 (seed reproducible):
+
+```
+input = 2 -4 -2      (n = 2, array [-4, -2])
+brute = -2           (correct: max subarray is the single element -2)
+buggy = 0            (wrong: Kadane clamped to 0 on an all-negative array)
+```
+
+The corrected Kadane (best initialized to `a[0]`) passes all 2000 rounds. This is
+the tool catching a bug a competitive programmer actually makes, not a toy mismatch.
 
 ## testlib semantics covered
 
@@ -105,7 +126,9 @@ matching testlib.h's `readInt` / `readLong` contract, reimplemented natively.
 - [x] **W2** — `runner`: subprocess management, timeout kill, capture, verdict mapping.
 - [x] **W3** — stress core + CLI (`demo` / `judge` / `stress`), counterexample persistence.
 - [x] **W4** — throughput benchmark, full documentation, reproducible demo.
-- [ ] Future: double/tolerance checkers, more built-in validators, mooncakes publication.
+- [x] **Post-MVP** — double/tolerance checkers (`read_double`, `check_double`),
+  real CSP-style dogfooding case (`examples`).
+- [ ] Future: more built-in validators, mooncakes publication.
 
 ## License & origin
 
