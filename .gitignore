@@ -1,0 +1,5 @@
+_build/
+.mooncakes/
+*.mi
+*.core
+moonjudge-failure/

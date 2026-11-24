@@ -1,0 +1,18 @@
+import {
+  "moonbitlang/core/env",
+  "moonbitlang/core/string",
+  "moonbitlang/core/async/fs",
+  "moonjudge/checker",
+  "moonjudge/checkers",
+  "moonjudge/gen",
+  "moonjudge/stress",
+  "moonjudge/runner",
+}
+
+pkgtype(kind: "executable")
+
+options(
+  "allow-experimental-packages": true,
+)
+
+supported_targets = "-all+native+wasm"

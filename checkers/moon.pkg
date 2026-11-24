@@ -1,0 +1,7 @@
+import {
+  "moonjudge/checker",
+}
+
+import {
+  "moonbitlang/core/bench",
+} for "test"
