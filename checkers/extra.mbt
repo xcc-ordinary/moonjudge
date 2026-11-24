@@ -26,11 +26,7 @@ pub fn check_yes_no(output : String) -> Unit raise @checker.CheckError {
   let s = @checker.InStream::new(output)
   let t = s.read_token()
   s.read_eof()
-  let low : Array[Char] = []
-  for c in t.to_array() {
-    low.push(c.to_ascii_lowercase())
-  }
-  let ls = String::from_array(low)
+  let ls = lower(t)
   if ls != "yes" && ls != "no" {
     raise @checker.check_error("expected yes/no, got \{t}")
   }
@@ -60,6 +56,41 @@ pub fn check_double_sequence(output : String) -> Unit raise @checker.CheckError 
       break
     }
     let _ = s.read_double()
+  }
+  s.read_eof()
+}
+
+///|
+fn lower(t : String) -> String {
+  let a : Array[Char] = []
+  for c in t.to_array() {
+    a.push(c.to_ascii_lowercase())
+  }
+  String::from_array(a)
+}
+
+///|
+/// Check the output is exactly the expected whitespace-separated token sequence.
+/// With `ignore_case=true`, comparison is ASCII case-insensitive.
+pub fn check_tokens(
+  output : String,
+  expected : ArrayView[String],
+  ignore_case? : Bool,
+) -> Unit raise @checker.CheckError {
+  let s = @checker.InStream::new(output)
+  let ic = ignore_case.unwrap_or(false)
+  for i in 0..<expected.length() {
+    let t = s.read_token()
+    let ok = if ic {
+      lower(t) == lower(expected[i])
+    } else {
+      t == expected[i]
+    }
+    if !ok {
+      raise @checker.check_error(
+        "token mismatch at \{i}: expected \{expected[i]}, got \{t}",
+      )
+    }
   }
   s.read_eof()
 }

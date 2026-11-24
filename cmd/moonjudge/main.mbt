@@ -13,6 +13,7 @@ fn main {
     "demo" => demo()
     "judge" => judge_cli(args)
     "stress" => stress_cli(args)
+    "batch" => batch_cli(args)
     _ => print_usage()
   }
 }
@@ -43,6 +44,13 @@ fn print_usage() -> Unit {
   )
   println(
     "      as its last argument. Saves the first counterexample for replay.",
+  )
+  println("  moonjudge batch --prog \"CMD\" --tests DIR")
+  println(
+    "                  [--checker MODE] [--timeout MS]",
+  )
+  println(
+    "      Judge a program over every DIR/*.in case against its DIR/*.ans.",
   )
 }
 
@@ -268,4 +276,53 @@ async fn stress_cli(args : Array[String]) -> Unit {
     }
   }
   println("All \{rounds} rounds agree (seed=\{seed}).")
+}
+
+// ---- batch: judge a program over a directory of *.in / *.ans cases ----
+
+///|
+async fn batch_cli(args : Array[String]) -> Unit {
+  let (p, a) = split_cmd(get_opt(args, "--prog").unwrap_or(""))
+  let dir = get_opt(args, "--tests").unwrap_or("")
+  let mode = parse_mode(get_opt(args, "--checker").unwrap_or("exact"))
+  let timeout = parse_int(get_opt(args, "--timeout").unwrap_or("5000"))
+  if p == "" || dir == "" {
+    println("batch: need --prog \"CMD\" and --tests DIR")
+    return
+  }
+  let names = @fs.readdir(dir, sort=true)
+  let mut total = 0
+  let mut ac = 0
+  for name in names {
+    match name.strip_suffix(".in") {
+      Some(base_view) => {
+        total = total + 1
+        let base = base_view.to_owned()
+        let input = @fs.read_text(dir + "/" + name)
+        let answer : String? = Some(@fs.read_text(dir + "/" + base + ".ans")) catch {
+          _ => None
+        }
+        match answer {
+          None => println("\{base}: CF (missing .ans file)")
+          Some(exp) => {
+            let r = @runner.run(p, a, stdin=input, timeout_ms=timeout)
+            let check : (String) -> Unit raise @checker.CheckError = out => {
+              match @stress.compare(exp, out, mode) {
+                Some(reason) => raise @checker.check_error(reason)
+                None => ()
+              }
+            }
+            let v = @runner.judge(r, check)
+            match v {
+              @checker.Verdict::AC => ac = ac + 1
+              _ => ()
+            }
+            println("\{base}: \{verdict_string(v)}")
+          }
+        }
+      }
+      None => ()
+    }
+  }
+  println("\{ac}/\{total} AC")
 }

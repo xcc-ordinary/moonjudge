@@ -60,3 +60,40 @@ pub fn check_doubles(
   }
   s.read_eof()
 }
+
+///|
+/// Check the output is a permutation (multiset) of `expected` doubles, matched
+/// within `eps` (default 1.0e-6) after sorting both sides, followed by EOF.
+pub fn check_unordered_doubles(
+  output : String,
+  expected : ArrayView[Double],
+  eps? : Double,
+) -> Unit raise @checker.CheckError {
+  let s = @checker.InStream::new(output)
+  let got : Array[Double] = []
+  while true {
+    s.skip_space()
+    if s.eof() {
+      break
+    }
+    got.push(s.read_double())
+  }
+  s.read_eof()
+  if got.length() != expected.length() {
+    raise @checker.check_error(
+      "wrong count: expected \{expected.length()}, got \{got.length()}",
+    )
+  }
+  let exp : Array[Double] = []
+  for x in expected {
+    exp.push(x)
+  }
+  got.sort()
+  exp.sort()
+  let tol = eps.unwrap_or(1.0e-6)
+  for i in 0..<got.length() {
+    if !double_close(got[i], exp[i], tol) {
+      raise @checker.check_error("multiset mismatch at position \{i}")
+    }
+  }
+}

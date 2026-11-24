@@ -6,6 +6,8 @@ of the strict checking semantics of [testlib.h](https://github.com/MikeMirzayano
 and a reproducible stress-testing ("对拍") CLI.
 
 > 2026 MoonBit Hackathon entry · direction: developer tools · November season.
+>
+> 中文文档：[README.zh-CN.md](README.zh-CN.md)
 
 ## Why
 
@@ -26,7 +28,8 @@ a scan of ~100 mooncakes keywords found zero projects for `testlib` or judging.
   `check_unordered_ints` (multiset), `check_permutation` (of 1..n), `check_yes_no`
   (case-insensitive), `check_token` (exact), `check_double` / `check_doubles` /
   `check_double_sequence` (absolute/relative tolerance, testlib-style),
-  `check_sorted` (nondecreasing integer sequence).
+  `check_sorted` (nondecreasing integer sequence), `check_unordered_doubles`
+  (tolerance multiset), `check_tokens` (string sequence, optional case-insensitive).
 - **`gen`** — seedable, reproducible `Rng` (xorshift64*) with `next_int(min, max)`,
   `next_array`, and `permutation` (Fisher-Yates).
 - **`runner`** — async subprocess execution with stdin feed, stdout/stderr capture,
@@ -34,7 +37,7 @@ a scan of ~100 mooncakes keywords found zero projects for `testlib` or judging.
 - **`stress`** — reproducible comparison loop (`stress_inprocess`) with four compare
   modes (`Exact` / `Ints` / `UnorderedInts` / `Doubles(eps)`); returns the first
   counterexample with its seed for exact replay.
-- **`cmd/moonjudge`** — CLI with `demo`, `judge`, and `stress` subcommands. `judge`
+- **`cmd/moonjudge`** — CLI with `demo`, `judge`, `stress`, and `batch` subcommands. `judge`
   validates format or, with `--answer FILE`, compares against a reference output
   (a real local judge). Persists counterexamples to `moonjudge-failure/` for replay.
 - **`examples`** — dogfooding on real CSP-style problems: maximum subarray sum
@@ -54,8 +57,8 @@ Then import the packages you need, e.g. `xcc-ordinary/moonjudge/checkers`
 ## Quickstart
 
 ```bash
-moon test --target wasm          # full regression suite (79 tests)
-moon test --target wasm-gc       # pure-logic packages (71 tests)
+moon test --target wasm          # full regression suite (83 tests)
+moon test --target wasm-gc       # pure-logic packages (75 tests)
 
 # Self-contained demo: catches a planted bug and saves the counterexample.
 moon run --target wasm cmd/moonjudge -- demo
@@ -67,6 +70,9 @@ moon run --target wasm cmd/moonjudge -- judge --prog "sol.exe" --answer ans.txt 
 # Stress-test external programs (generator receives the round seed as its last arg).
 moon run --target wasm cmd/moonjudge -- stress \
   --gen "gen.exe" --brute "brute.exe" --fast "fast.exe" --rounds 100 --seed 42
+
+# Batch-judge a program over a directory of cases (case.in + case.ans).
+moon run --target wasm cmd/moonjudge -- batch --prog "sol.exe" --tests ./tests --checker ints
 ```
 
 The `wasm` target runs out of the box through `moonrun` and spawns real OS processes —
@@ -94,13 +100,13 @@ Saved counterexample to moonjudge-failure/ (replay with the seed).
 | `gen` | Reproducible test-data generation |
 | `runner` | Subprocess execution, timeout, capture, verdict mapping |
 | `stress` | Reproducible brute-vs-fast comparison loop + counterexample capture |
-| `cmd/moonjudge` | CLI entry: `demo` / `judge` / `stress` |
+| `cmd/moonjudge` | CLI entry: `demo` / `judge` / `stress` / `batch` |
 | `examples` | Dogfooding: real CSP-style problem stress cases |
 | `probe` | Minimal subprocess capability probe |
 
 ## Verification
 
-- **79 tests passing** on `wasm` (full suite), **71** on `wasm-gc` (pure logic).
+- **83 tests passing** on `wasm` (full suite), **75** on `wasm-gc` (pure logic).
 - A deliberately-wrong regression corpus exercises every strict integer / double rule.
 - The stress demo plants a real bug (`n % 7 == 0` off-by-one) and the loop catches it;
   the same seed reproduces the identical counterexample.
@@ -162,6 +168,8 @@ matching testlib.h's `readInt` / `readLong` contract, reimplemented natively.
   `check_token`, `judge --answer` reference comparison + `Doubles` mode, two real
   CSP-style dogfooding cases (`examples`).
 - [x] mooncakes publication (`xcc-ordinary/moonjudge` 0.1.0).
+- [x] **0.2.0** — `check_unordered_doubles` / `check_tokens`, `batch` directory
+  judging, Chinese README.
 - [ ] Future: more validators.
 
 ## License & origin
