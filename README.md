@@ -22,31 +22,34 @@ a scan of ~100 mooncakes keywords found zero projects for `testlib` or judging.
   `read_double` (strict decimal / exponent), `read_token`, `read_line`, `read_eof`,
   `ensure`; `CheckError` and `Verdict`
   (`AC` / `WA` / `TLE` / `RE` / `CF`) types.
-- **`checkers`** — ready-made checkers: `check_ints`, `check_int_sequence`
-  (any-length strict integer sequence), `check_unordered_ints` (multiset / permutation),
-  `check_double` / `check_doubles` (absolute/relative tolerance, testlib-style).
+- **`checkers`** — ready-made checkers: `check_ints`, `check_int_sequence`,
+  `check_unordered_ints` (multiset), `check_permutation` (of 1..n), `check_yes_no`
+  (case-insensitive), `check_token` (exact), `check_double` / `check_doubles` /
+  `check_double_sequence` (absolute/relative tolerance, testlib-style).
 - **`gen`** — seedable, reproducible `Rng` (xorshift64*) with `next_int(min, max)`.
 - **`runner`** — async subprocess execution with stdin feed, stdout/stderr capture,
   timeout kill, and verdict mapping (`judge`).
-- **`stress`** — reproducible comparison loop (`stress_inprocess`) with three compare
-  modes (`Exact` / `Ints` / `UnorderedInts`); returns the first counterexample with
-  its seed for exact replay.
-- **`cmd/moonjudge`** — CLI with `demo`, `judge`, and `stress` subcommands; persists
-  counterexamples to `moonjudge-failure/` for replay.
-- **`examples`** — dogfooding on a real CSP-style problem (maximum subarray sum):
-  stress catches the classic all-negative Kadane bug.
+- **`stress`** — reproducible comparison loop (`stress_inprocess`) with four compare
+  modes (`Exact` / `Ints` / `UnorderedInts` / `Doubles(eps)`); returns the first
+  counterexample with its seed for exact replay.
+- **`cmd/moonjudge`** — CLI with `demo`, `judge`, and `stress` subcommands. `judge`
+  validates format or, with `--answer FILE`, compares against a reference output
+  (a real local judge). Persists counterexamples to `moonjudge-failure/` for replay.
+- **`examples`** — dogfooding on real CSP-style problems: maximum subarray sum
+  (all-negative Kadane bug) and lower_bound binary search (duplicate-element bug).
 
 ## Quickstart
 
 ```bash
-moon test --target wasm          # full regression suite (58 tests)
-moon test --target wasm-gc       # pure-logic packages (50 tests)
+moon test --target wasm          # full regression suite (72 tests)
+moon test --target wasm-gc       # pure-logic packages (64 tests)
 
 # Self-contained demo: catches a planted bug and saves the counterexample.
 moon run --target wasm cmd/moonjudge -- demo
 
-# Judge a solution's output.
+# Judge a solution: validate format, or compare against a reference answer.
 moon run --target wasm cmd/moonjudge -- judge --prog "cmd.exe /c echo 42" --checker ints
+moon run --target wasm cmd/moonjudge -- judge --prog "sol.exe" --answer ans.txt --checker doubles
 
 # Stress-test external programs (generator receives the round seed as its last arg).
 moon run --target wasm cmd/moonjudge -- stress \
@@ -84,7 +87,7 @@ Saved counterexample to moonjudge-failure/ (replay with the seed).
 
 ## Verification
 
-- **58 tests passing** on `wasm` (full suite), **50** on `wasm-gc` (pure logic).
+- **72 tests passing** on `wasm` (full suite), **64** on `wasm-gc` (pure logic).
 - A deliberately-wrong regression corpus exercises every strict integer / double rule.
 - The stress demo plants a real bug (`n % 7 == 0` off-by-one) and the loop catches it;
   the same seed reproduces the identical counterexample.
@@ -114,6 +117,18 @@ buggy = 0            (wrong: Kadane clamped to 0 on an all-negative array)
 The corrected Kadane (best initialized to `a[0]`) passes all 2000 rounds. This is
 the tool catching a bug a competitive programmer actually makes, not a toy mismatch.
 
+A second case, `examples/lower_bound.mbt`, stress-tests **lower_bound** binary search
+against a linear scan. The buggy version uses `a[mid] <= target` (computing upper_bound),
+which is wrong whenever the target has duplicates:
+
+```
+input = 8 1 0 0 1 3 3 4 4 4   (n = 8, target = 1, sorted array)
+brute = 2                     (correct lower_bound: first index with a[i] >= 1)
+buggy = 3                     (wrong: upper_bound, first index with a[i] > 1)
+```
+
+The corrected binary search (`a[mid] < target`) passes all 2000 rounds.
+
 ## testlib semantics covered
 
 Strict integer reading rejects: leading zeros (`007`), negative zero (`-0`),
@@ -126,9 +141,10 @@ matching testlib.h's `readInt` / `readLong` contract, reimplemented natively.
 - [x] **W2** — `runner`: subprocess management, timeout kill, capture, verdict mapping.
 - [x] **W3** — stress core + CLI (`demo` / `judge` / `stress`), counterexample persistence.
 - [x] **W4** — throughput benchmark, full documentation, reproducible demo.
-- [x] **Post-MVP** — double/tolerance checkers (`read_double`, `check_double`),
-  real CSP-style dogfooding case (`examples`).
-- [ ] Future: more built-in validators, mooncakes publication.
+- [x] **Post-MVP** — double/tolerance checkers, `check_permutation` / `check_yes_no` /
+  `check_token`, `judge --answer` reference comparison + `Doubles` mode, two real
+  CSP-style dogfooding cases (`examples`).
+- [ ] Future: mooncakes publication, more validators.
 
 ## License & origin
 

@@ -27,8 +27,13 @@ fn print_usage() -> Unit {
     "      Run the built-in planted-bug stress demo; saves a counterexample.",
   )
   println("  moonjudge judge --prog \"CMD\" [--input FILE | --stdin TEXT]")
-  println("                  [--checker exact|ints|unordered] [--timeout MS]")
-  println("      Run a solution and judge its output.")
+  println(
+    "                  [--answer FILE] [--checker exact|ints|unordered|doubles]",
+  )
+  println("                  [--timeout MS]")
+  println(
+    "      Run a solution; with --answer, compare against a reference output.",
+  )
   println("  moonjudge stress --gen \"CMD\" --brute \"CMD\" --fast \"CMD\"")
   println(
     "                   [--rounds N] [--seed S] [--checker MODE] [--timeout MS]",
@@ -72,6 +77,7 @@ fn parse_mode(s : String) -> @stress.CompareMode {
   match s {
     "ints" => @stress.CompareMode::Ints
     "unordered" => @stress.CompareMode::UnorderedInts
+    "doubles" => @stress.CompareMode::Doubles(1.0e-6)
     _ => @stress.CompareMode::Exact
   }
 }
@@ -190,15 +196,31 @@ async fn judge_cli(args : Array[String]) -> Unit {
     Some(file) => @fs.read_text(file)
     None => get_opt(args, "--stdin").unwrap_or("")
   }
+  let answer = match get_opt(args, "--answer") {
+    Some(file) => Some(@fs.read_text(file))
+    None => None
+  }
   let r = @runner.run(p, a, stdin=input, timeout_ms=timeout)
-  let check : (String) -> Unit raise @checker.CheckError = match mode {
-    @stress.CompareMode::Ints => out => @checkers.check_int_sequence(out)
-    @stress.CompareMode::UnorderedInts =>
-      out => @checkers.check_int_sequence(out)
-    @stress.CompareMode::Exact =>
+  let check : (String) -> Unit raise @checker.CheckError = match answer {
+    Some(exp) =>
       out => {
-        let _ = out
-        ()
+        match @stress.compare(exp, out, mode) {
+          Some(reason) => raise @checker.check_error(reason)
+          None => ()
+        }
+      }
+    None =>
+      match mode {
+        @stress.CompareMode::Ints => out => @checkers.check_int_sequence(out)
+        @stress.CompareMode::UnorderedInts =>
+          out => @checkers.check_int_sequence(out)
+        @stress.CompareMode::Doubles(_) =>
+          out => @checkers.check_double_sequence(out)
+        @stress.CompareMode::Exact =>
+          out => {
+            let _ = out
+            ()
+          }
       }
   }
   let v = @runner.judge(r, check)

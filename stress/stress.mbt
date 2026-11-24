@@ -11,6 +11,8 @@ pub(all) enum CompareMode {
   Ints
   /// Integer multiset equality (order-insensitive).
   UnorderedInts
+  /// Ordered double-sequence equality within absolute/relative tolerance `eps`.
+  Doubles(Double)
 }
 
 ///|
@@ -36,6 +38,7 @@ pub fn compare(brute : String, fast : String, mode : CompareMode) -> String? {
       }
     Ints => compare_ints(brute, fast, true)
     UnorderedInts => compare_ints(brute, fast, false)
+    Doubles(eps) => compare_doubles(brute, fast, eps)
   }
 }
 
@@ -69,6 +72,62 @@ fn compare_ints(brute : String, fast : String, ordered : Bool) -> String? {
     for i in 0..<b.length() {
       if b[i] != f[i] {
         return Some("int mismatch at position \{i}")
+      }
+    }
+    None
+  } catch {
+    @checker.CheckError(msg) => Some("parse error: " + msg)
+  }
+}
+
+///|
+fn dabs(x : Double) -> Double {
+  if x < 0.0 {
+    -x
+  } else {
+    x
+  }
+}
+
+///|
+fn close_enough(a : Double, b : Double, eps : Double) -> Bool {
+  let diff = dabs(a - b)
+  let mut scale = 1.0
+  if dabs(a) > scale {
+    scale = dabs(a)
+  }
+  if dabs(b) > scale {
+    scale = dabs(b)
+  }
+  diff <= eps * scale
+}
+
+///|
+fn read_all_doubles(text : String) -> Array[Double] raise @checker.CheckError {
+  let s = @checker.InStream::new(text)
+  let arr : Array[Double] = []
+  while true {
+    s.skip_space()
+    if s.eof() {
+      break
+    }
+    arr.push(s.read_double())
+  }
+  s.read_eof()
+  arr
+}
+
+///|
+fn compare_doubles(brute : String, fast : String, eps : Double) -> String? {
+  try {
+    let b = read_all_doubles(brute)
+    let f = read_all_doubles(fast)
+    if b.length() != f.length() {
+      return Some("double count mismatch: \{b.length()} vs \{f.length()}")
+    }
+    for i in 0..<b.length() {
+      if !close_enough(b[i], f[i], eps) {
+        return Some("double mismatch at position \{i}")
       }
     }
     None
