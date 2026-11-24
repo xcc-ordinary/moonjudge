@@ -50,7 +50,7 @@ fn print_usage() -> Unit {
     "                  [--checker MODE] [--timeout MS]",
   )
   println(
-    "      Judge a program over every DIR/*.in case against its DIR/*.ans.",
+    "      Judge a program over every DIR/*.in case against its DIR/*.ans or *.out.",
   )
 }
 
@@ -312,7 +312,7 @@ async fn stress_cli(args : Array[String]) -> Unit {
   println("All \{rounds} rounds agree (seed=\{seed}).")
 }
 
-// ---- batch: judge a program over a directory of *.in / *.ans cases ----
+// ---- batch: judge a program over a directory of *.in / *.ans (or *.out) cases ----
 
 ///|
 async fn batch_cli(args : Array[String]) -> Unit {
@@ -342,8 +342,15 @@ async fn batch_cli(args : Array[String]) -> Unit {
         let answer : String? = Some(@fs.read_text(dir + "/" + base + ".ans")) catch {
           _ => None
         }
+        let answer = match answer {
+          Some(a) => Some(a)
+          None =>
+            Some(@fs.read_text(dir + "/" + base + ".out")) catch {
+              _ => None
+            }
+        }
         match answer {
-          None => println("\{base}: CF (missing .ans file)")
+          None => println("\{base}: CF (missing .ans/.out file)")
           Some(exp) => {
             let r = @runner.run(p, a, stdin=input, timeout_ms=timeout)
             let check : (String) -> Unit raise @checker.CheckError = out => {
