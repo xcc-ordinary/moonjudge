@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+- CI: add an explicit `moon build --target wasm` step (check → build → test coverage).
+- Docs: state the minimum toolchain version (`moonc` >= 0.10.16) in both READMEs.
+
 ## 0.2.2
 - CLI: validate required commands and positive numeric options (clear errors instead of silent defaults).
 - CLI: archive each counterexample under `moonjudge-failure/<seed>/` to preserve history.

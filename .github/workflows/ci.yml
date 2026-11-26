@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: MoonBit check & test
+    name: MoonBit check, build & test
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -27,6 +27,9 @@ jobs:
 
       - name: Check (wasm)
         run: moon check --target wasm
+
+      - name: Build (wasm)
+        run: moon build --target wasm
 
       - name: Test (wasm, full suite)
         run: moon test --target wasm

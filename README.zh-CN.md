@@ -42,6 +42,12 @@ moon add xcc-ordinary/moonjudge
 - **`cmd/moonjudge`** —— CLI：`demo` / `judge` / `stress` / `batch`。`judge` 支持
   `--answer` 对参考答案评测；`batch` 遍历目录批量评测；反例落盘 `moonjudge-failure/`。
 
+## 环境要求
+
+- MoonBit 工具链：`moonc` **≥ 0.10.16**（开发与验证使用 v0.10.22）。
+  从 <https://www.moonbitlang.cn/download/> 安装后执行 `moon update`。
+- `wasm` 目标无需 C 编译器（经 `moonrun` 运行）；`native` 目标另需系统 C 编译器（cc/gcc/clang）。
+
 ## 快速开始
 
 ```bash
@@ -86,7 +92,7 @@ check_unordered_ints:  30000 ints (reversed) in ~0.003s
 ## 验证
 
 - wasm 全量 **87 测试通过**，wasm-gc 纯逻辑 **78** 通过。
-- CI（GitHub Actions）在每次 push/PR 时跑 check + 全量测试。
+- CI（GitHub Actions）在每次 push/PR 时跑 check + build + 全量测试。
 - 故意构造的错误回归样例库覆盖每条严格整数/浮点规则。
 - 跨平台集成测试按操作系统选择 `cmd.exe` / `sh`。
 

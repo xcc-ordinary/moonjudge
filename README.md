@@ -56,6 +56,13 @@ moon add xcc-ordinary/moonjudge
 Then import the packages you need, e.g. `xcc-ordinary/moonjudge/checkers`
 (as `@checkers`) and `xcc-ordinary/moonjudge/stress`.
 
+## Requirements
+
+- MoonBit toolchain with `moonc` **>= 0.10.16** (developed and verified with v0.10.22).
+  Install from <https://www.moonbitlang.com/download/>, then run `moon update`.
+- The `wasm` target needs no C compiler (runs via `moonrun`); the `native` target
+  additionally requires a system C compiler (`cc` / `gcc` / `clang`).
+
 ## Quickstart
 
 ```bash
@@ -109,7 +116,7 @@ Saved counterexample to moonjudge-failure/ (replay with the seed).
 ## Verification
 
 - **87 tests passing** on `wasm` (full suite), **78** on `wasm-gc` (pure logic).
-- CI (GitHub Actions) runs check + full tests on every push and pull request.
+- CI (GitHub Actions) runs check, build, and full tests on every push and pull request.
 - A deliberately-wrong regression corpus exercises every strict integer / double rule.
 - The stress demo plants a real bug (`n % 7 == 0` off-by-one) and the loop catches it;
   the same seed reproduces the identical counterexample.
@@ -177,6 +184,8 @@ matching testlib.h's `readInt` / `readLong` contract, reimplemented natively.
   timeouts (TLE); GitHub Actions CI.
 - [x] **0.2.2** — CLI argument validation, per-seed counterexample archive,
   `batch` `*.out` fallback, CHANGELOG.
+- [x] **0.2.3** — explicit CI build step (check → build → test); documented
+  toolchain requirement (`moonc` >= 0.10.16).
 - [ ] Future: more validators.
 
 ## License & origin
